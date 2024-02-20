@@ -1,0 +1,20 @@
+from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth import get_user_model
+from django.core.exceptions import MultipleObjectsReturned
+
+
+class EmailBackend(ModelBackend):
+    """
+    Не стал писать LoginView и делать проверку на user.is_verified_email чтоб не усложнять вход
+    """
+
+    def authenticate(self, request, username=None, password=None, **kwargs):
+        UserModel = get_user_model()
+        try:
+            user = UserModel.objects.get(email=username)
+            if user.check_password(password):
+                return user
+        except UserModel.DoesNotExist:
+            return None
+        except MultipleObjectsReturned:
+            return UserModel.objects.filter(email=username).order_by("id").first()
